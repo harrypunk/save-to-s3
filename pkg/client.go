@@ -6,9 +6,7 @@ import (
 	"net/http"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
 
 // UploadFileToS3 downloads a file from a URL and uploads it to an S3 bucket with an optional endpoint.
@@ -16,33 +14,13 @@ func UploadFileToS3(ctx context.Context, bucketName, objectKey, fileURL, endpoin
 	var cfg aws.Config
 	var err error
 
-	if endpoint != "" {
-		customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-			if service == s3.ServiceID {
-				return aws.Endpoint{
-					URL:           endpoint,
-					SigningRegion: region,
-				}, nil
-			}
-			// returning EndpointNotFoundError will allow the service to fall back to its default resolution
-			return aws.Endpoint{}, &aws.EndpointNotFoundError{}
-		})
-
-		cfg, err = config.LoadDefaultConfig(ctx, config.WithEndpointResolverWithOptions(customResolver))
-
-	} else {
-		cfg, err = config.LoadDefaultConfig(ctx)
-	}
-
-	if err != nil {
-		return fmt.Errorf("unable to load SDK config, %v", err)
-	}
-
-	client := s3.NewFromConfig(cfg)
+	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
+		o.BaseEndpoint = aws.String(endpoint)
+	})
 
 	resp, err := http.Get(fileURL)
 	if err != nil {
-		return fmt.Errorf("failed to download file: %v", err)
+		return fmt.Errorf("http get error: %v", err)
 	}
 	defer resp.Body.Close()
 
