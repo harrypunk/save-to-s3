@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
@@ -26,6 +27,10 @@ func (cl *Client) Save(bucketName, objectKey, fileURL string) error {
 	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
 		o.BaseEndpoint = aws.String(cl.Endpoint)
 	})
+	var partMiBs int64 = 10
+	uploader := manager.NewUploader(client, func(u *manager.Uploader) {
+		u.PartSize = partMiBs * 1024 * 1024
+	})
 
 	resp, err := http.Get(fileURL)
 	if err != nil {
@@ -37,7 +42,7 @@ func (cl *Client) Save(bucketName, objectKey, fileURL string) error {
 		return fmt.Errorf("failed to download file, status code: %d", resp.StatusCode)
 	}
 
-	_, err = client.PutObject(context.Background(), &s3.PutObjectInput{
+	_, err = uploader.Upload(context.Background(), &s3.PutObjectInput{
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(objectKey),
 		Body:   resp.Body,
