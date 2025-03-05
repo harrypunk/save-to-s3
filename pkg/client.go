@@ -15,11 +15,11 @@ type Client struct {
 	Endpoint string
 }
 
-func (cl *Client) Save(bucketName, objectKey, fileURL string) error {
+func (cl *Client) Save(ctx context.Context, bucketName, objectKey, fileURL string) error {
 	var cfg aws.Config
 	var err error
 
-	cfg, err = config.LoadDefaultConfig(context.Background())
+	cfg, err = config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func (cl *Client) Save(bucketName, objectKey, fileURL string) error {
 		return fmt.Errorf("failed to download file, status code: %d", resp.StatusCode)
 	}
 
-	_, err = uploader.Upload(context.Background(), &s3.PutObjectInput{
+	_, err = uploader.Upload(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(objectKey),
 		Body:   resp.Body,
