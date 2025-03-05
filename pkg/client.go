@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
@@ -13,9 +14,14 @@ type Client struct {
 	Endpoint string
 }
 
-func (cl *Client) UploadFileToS3(ctx context.Context, bucketName, objectKey, fileURL string) error {
+func (cl *Client) Save(bucketName, objectKey, fileURL string) error {
 	var cfg aws.Config
 	var err error
+
+	cfg, err = config.LoadDefaultConfig(context.Background())
+	if err != nil {
+		return err
+	}
 
 	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
 		o.BaseEndpoint = aws.String(cl.Endpoint)
@@ -31,7 +37,7 @@ func (cl *Client) UploadFileToS3(ctx context.Context, bucketName, objectKey, fil
 		return fmt.Errorf("failed to download file, status code: %d", resp.StatusCode)
 	}
 
-	_, err = client.PutObject(ctx, &s3.PutObjectInput{
+	_, err = client.PutObject(context.Background(), &s3.PutObjectInput{
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(objectKey),
 		Body:   resp.Body,
