@@ -9,13 +9,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
-// UploadFileToS3 downloads a file from a URL and uploads it to an S3 bucket with an optional endpoint.
-func UploadFileToS3(ctx context.Context, bucketName, objectKey, fileURL, endpoint string) error {
+type Client struct {
+	Endpoint string
+}
+
+func (cl *Client) UploadFileToS3(ctx context.Context, bucketName, objectKey, fileURL string) error {
 	var cfg aws.Config
 	var err error
 
 	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
-		o.BaseEndpoint = aws.String(endpoint)
+		o.BaseEndpoint = aws.String(cl.Endpoint)
 	})
 
 	resp, err := http.Get(fileURL)
