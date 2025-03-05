@@ -8,15 +8,15 @@ import (
 )
 
 func TestSave(t *testing.T) {
-	err := godotenv.Load(".env.dev")
+	err := godotenv.Load("../.env")
 	if err != nil {
 		t.Errorf("load dotenv error: %v", err)
 	}
 
-	fileUrl := os.Getenv("SRC-FILE-URL")
-	endpoint := os.Getenv("DEST-S3-ENDPOINT")
-	buck := os.Getenv("DEST-S3-BUCKET")
-	key := os.Getenv("DEST-S3-key")
+	fileUrl := os.Getenv("SRC_FILE_URL")
+	endpoint := os.Getenv("DEST_S3_ENDPOINT")
+	buck := os.Getenv("DEST_S3_BUCKET")
+	key := os.Getenv("DEST_S3_key")
 	saveClient := Client{
 		Endpoint: endpoint,
 	}
